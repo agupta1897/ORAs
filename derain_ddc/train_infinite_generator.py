@@ -25,8 +25,8 @@ import data_generator as dg
 import loss_msssim
 
 def train_unet():
-    #out_model_path = 'zf_unet_224_temp.h5'
-    epochs = 4000
+    out_model_path = 'temp.h5'
+    epochs = 10
     patience = 20
     batch_size = 12
     optim_type = 'Adam'
@@ -45,7 +45,7 @@ def train_unet():
 
     callbacks = [
 
-        ModelCheckpoint('zf_unet_224_temp.h5', monitor='val_loss', save_best_only=True, verbose=0),
+        ModelCheckpoint('temp.h5', monitor='val_loss', save_best_only=True, verbose=0),
     ]
 
     print('Start training...')
@@ -59,7 +59,7 @@ def train_unet():
         callbacks=callbacks)
 
     model.save_weights(out_model_path)
-    pd.DataFrame(history.history).to_csv('zf_unet_224_train.csv', index=False)
+    pd.DataFrame(history.history).to_csv('train.csv', index=False)
     print('Training is finished (weights zf_unet_224.h5 and log zf_unet_224_train.csv are generated )...')
 
 

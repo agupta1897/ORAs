@@ -4,17 +4,17 @@ import cv2
 import numpy as np
 
 
-dataset_folder = "/home/syan/workspace/yujinke/RainDataset/compose"
+dataset_folder = "/u/eot/manavm3/ORAs/data/reflection/SIR/"
 
-mask_truth_folder = os.path.join(dataset_folder, "map")
-blend_folder = os.path.join(dataset_folder, "blended")
-gd_folder = os.path.join(dataset_folder, "ground_truth")
+#mask_truth_folder = os.path.join(dataset_folder, "map")
+blend_folder = os.path.join(dataset_folder, "mixed_image_train")
+gd_folder = os.path.join(dataset_folder, "ground_truth_train")
 ground_truth_images_list = []
 
 for one in os.listdir(gd_folder):
     name, ext = os.path.splitext(one)
     # path = os.path.join(gd_folder, one)
-    ground_truth_images_list.append(name)
+    ground_truth_images_list.append(one)
 
 
 def randomCrop(image,ground_truth,crop_size):
@@ -44,24 +44,27 @@ def batch_generator(batch_size):
         #选一张图片
         # rain_image = os.path.join(blend_folder, name + ".png")
         k = 0
-        for x in xrange(batch_size):
+        for x in range(batch_size):
             # print ground_truth_images_list
             name = ground_truth_images_list[np.random.randint(0, len(ground_truth_images_list))]
-            blend  = os.path.join(blend_folder, name + ".png")
-            gt = os.path.join(gd_folder, name + ".png")
-            mask = os.path.join(mask_truth_folder, name + ".png")
+            k = name[:-3].rfind('g')
+            bname = name[:k] + 'm' + name[k+1:]
+            blend  = os.path.join(blend_folder, bname)
+            gt = os.path.join(gd_folder, name)
+            #mask = os.path.join(mask_truth_folder, name + ".png")
             try:
                 image_gt = cv2.imread(gt)/255.0
-                image_mask  = cv2.imread(mask,cv2.IMREAD_GRAYSCALE)/255.0
-                image_mask = np.expand_dims(image_mask,2)
+                #image_mask  = cv2.imread(mask,cv2.IMREAD_GRAYSCALE)/255.0
+                #image_mask = np.expand_dims(image_mask,2)
                 image_blend = cv2.imread(blend)/255.0
             except:
                 os.remove(blend)
                 os.remove(gt)
-                os.remove(mask)
+                #os.remove(mask)
                 k = 1
                 break
-
+            image_blend = cv2.resize(image_blend, (224,224), interpolation = cv2.INTER_AREA)
+            image_gt = cv2.resize(image_gt, (224, 224), interpolation = cv2.INTER_AREA)
             X[x] = image_blend
             Y[x] = image_gt
         yield X, Y
@@ -69,8 +72,8 @@ def batch_generator(batch_size):
 #
 if __name__ == '__main__':
 #
- for x,y in batch_generator(20):
-	pass
+    for x,y in batch_generator(20):
+        pass
 
 
 

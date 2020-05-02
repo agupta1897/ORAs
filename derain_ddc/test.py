@@ -22,22 +22,22 @@ image_list = []
 dg.batch_generator(1)
 
 def preprocess(image):
-    print image.shape
+    #print image.shape
 
 
 
     h,w,c = image.shape
     y_ratio = int(math.ceil(h/224.0))
     x_ratio = int(math.ceil(w/224.0))
-    print x_ratio,y_ratio
+    #print x_ratio,y_ratio
     x_res_full= 224 * x_ratio
     y_res_full= 224 * y_ratio
     x_padding = int((x_res_full - w)/2)
     y_padding = int((y_res_full - h)/2)
 
-    image = cv2.copyMakeBorder(image,y_padding,y_padding,x_padding,x_padding,cv2.BORDER_REFLECT)
+    #image = cv2.copyMakeBorder(image,y_padding,y_padding,x_padding,x_padding,cv2.BORDER_REFLECT)
     padding = [y_padding, y_padding, x_padding, x_padding]
-    return cv2.resize(image,(x_res_full,y_res_full)),padding
+    #return cv2.resize(image,(x_res_full,y_res_full)),padding
 
 def removePadding(image,padding):
     shapex = image.shape
@@ -47,13 +47,15 @@ def removePadding(image,padding):
 
 
 def processAll(name):
-    X,padding = preprocess(cv2.imread(name))
+    print("Entering Process ALL: "+name)
+    #X,padding = preprocess(cv2.imread(name))
+    print("Pre process done")
     input_image = X.astype(np.float)/255
-
+    print("Conv done")
     start = time()
 
     pre = model.predict(np.array([input_image]))
-
+    print("Predict done")
     stop = time()
     print("Stop: " + str(stop))
     print(str(stop-start) )
@@ -62,22 +64,22 @@ def processAll(name):
     output_image = pred.astype(np.uint8)
     input_image = input_image.astype(np.uint8)
     output_image = removePadding(output_image,padding)
-    cv2.imwrite("output.png",output_image)
-    cv2.imshow("output",output_image)
-    cv2.waitKey(0)
+    #cv2.imwrite("output.png",output_image)
+    #cv2.imshow("output",output_image)
+    #cv2.waitKey(0)
 
 
-path = "/home/syan/workspace/rainy_image_dataset/test"
+path = "/u/eot/manavm3/ORAs/data/reflection/SIR/mixed_image_test"
 images = [] 
 for root, dirs, files in os.walk(path):     
     for f in files :
         images.append(f)
-#for i in range(len(images)):
-    #processAll(path + "/" + images[i])
+for i in range(len(images)):
+    processAll(path + "/" + images[i])
 
 
-processAll("real_rain_img/re-1.jpg")
-processAll("real_rain_img/2-r.jpg")
+#processAll("real_rain_img/re-1.jpg")
+#processAll("real_rain_img/2-r.jpg")
 
 
 
