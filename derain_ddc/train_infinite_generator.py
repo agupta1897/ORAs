@@ -21,8 +21,15 @@ image_list = []
 #     return skimage.util.random_noise(image, var=0.005)
 
 import data_generator as dg
-
+import tensorflow as tf
 import loss_msssim
+
+def PSNR(y_true, y_pred):
+    max_pixel = 1.0
+    return (10.0 * K.log((max_pixel ** 2) / (K.mean(K.square(y_pred - y_true), axis=-1))))
+
+def SSIM(y_true, y_pred):
+  return tf.reduce_mean(tf.image.ssim(y_true, y_pred, 2.0))
 
 def train_unet():
     out_model_path = 'temp.h5'
@@ -41,7 +48,7 @@ def train_unet():
         optim = SGD(lr=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
     else:
         optim = Adam(lr=learning_rate)
-    model.compile(optimizer=optim, loss=loss_msssim.MS_SSIM_l1_loss)
+    model.compile(optimizer=optim, loss=loss_msssim.MS_SSIM_l1_loss, metrics=[PSNR, SSIM] )
 
     callbacks = [
 

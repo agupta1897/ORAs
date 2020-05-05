@@ -3,7 +3,7 @@ from keras.models import *
 import zf_unet_224_model
 import data_generator as dg
 model = zf_unet_224_model.ZF_UNET_224()
-model.load_weights("zf_unet_224_epcho260.h5")
+model.load_weights("temp.h5")
 
 #model = load_model("zf_unet_224_dust_ori.h5")
 
@@ -35,9 +35,9 @@ def preprocess(image):
     x_padding = int((x_res_full - w)/2)
     y_padding = int((y_res_full - h)/2)
 
-    #image = cv2.copyMakeBorder(image,y_padding,y_padding,x_padding,x_padding,cv2.BORDER_REFLECT)
+    image = cv2.copyMakeBorder(image,y_padding,y_padding,x_padding,x_padding,cv2.BORDER_REFLECT)
     padding = [y_padding, y_padding, x_padding, x_padding]
-    #return cv2.resize(image,(x_res_full,y_res_full)),padding
+    return cv2.resize(image,(x_res_full,y_res_full)),padding
 
 def removePadding(image,padding):
     shapex = image.shape
@@ -48,10 +48,11 @@ def removePadding(image,padding):
 
 def processAll(name):
     print("Entering Process ALL: "+name)
-    #X,padding = preprocess(cv2.imread(name))
+    X,padding = preprocess(cv2.imread(name))
     print("Pre process done")
     input_image = X.astype(np.float)/255
     print("Conv done")
+    cv2.imshow("input",input_image)
     start = time()
 
     pre = model.predict(np.array([input_image]))
@@ -64,12 +65,12 @@ def processAll(name):
     output_image = pred.astype(np.uint8)
     input_image = input_image.astype(np.uint8)
     output_image = removePadding(output_image,padding)
-    #cv2.imwrite("output.png",output_image)
-    #cv2.imshow("output",output_image)
-    #cv2.waitKey(0)
+    cv2.imwrite("output.png",output_image)
+    cv2.imshow("output",output_image)
+    cv2.waitKey(0)
 
 
-path = "/u/eot/manavm3/ORAs/data/reflection/SIR/mixed_image_test"
+path = "../data/reflection/SIR/mixed_image_test"
 images = [] 
 for root, dirs, files in os.walk(path):     
     for f in files :
