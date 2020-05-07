@@ -55,7 +55,8 @@ def train_unet():
 
     callbacks = [
 
-        ModelCheckpoint('temp.h5', monitor='val_loss', save_best_only=True, verbose=0),
+        ModelCheckpoint(out_model_path, monitor='val_loss', save_best_only=True, verbose=0),
+        EarlyStopping(monitor = 'val_loss', min_delta = 0, mode = 'auto', patience = epochs*0.1, verbose = 0)
     ]
 
     print('Start training...')
@@ -69,7 +70,7 @@ def train_unet():
         callbacks=callbacks)
 
     model.save_weights(out_model_path)
-    pd.DataFrame(history.history).to_csv('train.csv', index=False)
+    pd.DataFrame(history.history).to_csv(out_model_path.split('.')[0]+'train.csv', index=False)
     print('Training is finished (weights zf_unet_224.h5 and log zf_unet_224_train.csv are generated )...')
 
 
