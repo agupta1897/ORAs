@@ -12,7 +12,7 @@
 __author__ = 'ZFTurbo: https://kaggle.com/zfturbo'
 
 from keras.models import Model
-from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D, Conv2DTranspose
+from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D
 from keras.layers.normalization import BatchNormalization
 from keras.layers.core import Dropout, Activation
 from keras import backend as K
@@ -96,19 +96,19 @@ def ZF_UNET_224(dropout_val=0.0, batch_norm=True):
 
     conv_7 = double_conv_layer(pool_7, 32*filters, dropout_val, batch_norm)
 
-    up_14 = concatenate([Conv2DTranspose(16*filters, (2,2), strides = (2,2), padding = 'same')(conv_7), conv_14], axis=axis)
+    up_14 = concatenate([UpSampling2D(size=(2, 2))(conv_7), conv_14], axis=axis)
     up_conv_14 = double_conv_layer(up_14, 16*filters, dropout_val, batch_norm)
 
-    up_28 = concatenate([Conv2DTranspose(8*filters, (2,2), strides = (2,2), padding = 'same')(up_conv_14), conv_28], axis=axis)
+    up_28 = concatenate([UpSampling2D(size=(2, 2))(up_conv_14), conv_28], axis=axis)
     up_conv_28 = double_conv_layer(up_28, 8*filters, dropout_val, batch_norm)
 
-    up_56 = concatenate([Conv2DTranspose(4*filters, (2,2), strides = (2,2), padding = 'same')(up_conv_28), conv_56], axis=axis)
+    up_56 = concatenate([UpSampling2D(size=(2, 2))(up_conv_28), conv_56], axis=axis)
     up_conv_56 = double_conv_layer(up_56, 4*filters, dropout_val, batch_norm)
 
-    up_112 = concatenate([Conv2DTranspose(2*filters, (2,2), strides = (2,2), padding = 'same')(up_conv_56), conv_112], axis=axis)
+    up_112 = concatenate([UpSampling2D(size=(2, 2))(up_conv_56), conv_112], axis=axis)
     up_conv_112 = double_conv_layer(up_112, 2*filters, dropout_val, batch_norm)
 
-    up_224 = concatenate([Conv2DTranspose(filters, (2,2), strides = (2,2), padding = 'same')(up_conv_112), conv_224], axis=axis)
+    up_224 = concatenate([UpSampling2D(size=(2, 2))(up_conv_112), conv_224], axis=axis)
     up_conv_224 = double_conv_layer(up_224, filters, 0, batch_norm)
 
     conv_final = Conv2D(OUTPUT_MASK_CHANNELS, (1, 1))(up_conv_224)
