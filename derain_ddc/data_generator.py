@@ -4,18 +4,30 @@ import cv2
 import numpy as np
 
 
-dataset_folder = "/u/eot/manavm3/ORAs/data/reflection/SIR/"
-
+refl_dataset_folder = "../data/reflection/SIR/"
 #mask_truth_folder = os.path.join(dataset_folder, "map")
-blend_folder = os.path.join(dataset_folder, "mixed_image_train")
-gd_folder = os.path.join(dataset_folder, "ground_truth_train")
-ground_truth_images_list = []
+refl_blend_folder = os.path.join(refl_dataset_folder, "mixed_image_train")
+refl_gd_folder = os.path.join(refl_dataset_folder, "ground_truth_train")
+refl_img_list = []
 
-for one in os.listdir(gd_folder):
-    name, ext = os.path.splitext(one)
-    # path = os.path.join(gd_folder, one)
-    ground_truth_images_list.append(one)
+rain_dataset_folder = "../data/rain/rainy-image-dataset-master/"
+rain_blend_folder = os.path.join(rain_dataset_folder, "rainy_image_train")
+rain_gd_folder = os.path.join(rain_dataset_folder, "ground_truth_train")
+rain_img_list = []
 
+fenc_dataset_folder = "../data/de-fencing/SynthesizedData/train"
+fenc_blend_folder = os.path.join(fenc_dataset_folder, "fency")
+fenc_gd_folder = os.path.join(fenc_dataset_folder, "image")
+fenc_img_list = []
+
+for img in os.listdir(refl_blend_folder):
+    refl_img_list.append(img)
+
+for img in os.listdir(rain_blend_folder):
+    rain_img_list.append(img)
+
+for img in os.listdir(fenc_blend_folder):
+    fenc_img_list.append(img)
 
 def randomCrop(image,ground_truth,crop_size):
     if image.shape!=ground_truth.shape:
@@ -46,11 +58,23 @@ def batch_generator(batch_size):
         k = 0
         for x in range(batch_size):
             # print ground_truth_images_list
-            name = ground_truth_images_list[np.random.randint(0, len(ground_truth_images_list))]
-            k = name[:-3].rfind('g')
-            bname = name[:k] + 'm' + name[k+1:]
-            blend  = os.path.join(blend_folder, bname)
-            gt = os.path.join(gd_folder, name)
+            if ( x % 3 == 0 ): 
+                bname = refl_img_list[np.random.randint(0, len(refl_img_list))]
+                k = bname.rfind('m')
+                name = bname[:k] + 'g' + bname[k+1:]
+                blend  = os.path.join(refl_blend_folder, bname)
+                gt = os.path.join(refl_gd_folder, name)
+            elif ( x % 3 == 1 ):
+                bname = rain_img_list[np.random.randint(0, len(rain_img_list))]
+                k = bname.rfind('_')
+                name = bname[:k] + bname[-4:]
+                blend  = os.path.join(rain_blend_folder, bname)
+                gt = os.path.join(rain_gd_folder, name)
+            else:
+                bname = fenc_img_list[np.random.randint(0, len(fenc_img_list))]
+                name = bname
+                blend  = os.path.join(fenc_blend_folder, bname)
+                gt = os.path.join(fenc_gd_folder, name)
             #mask = os.path.join(mask_truth_folder, name + ".png")
             try:
                 image_gt = cv2.imread(gt)/255.0

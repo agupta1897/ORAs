@@ -2,7 +2,7 @@ import zf_unet_224_model
 import data_generator as dg
 from skimage.measure import compare_ssim as compare_ssim
 model = zf_unet_224_model.ZF_UNET_224()
-model.load_weights("zf_unet_224_temp_rain12_overfit.h5")
+model.load_weights("temp.h5")
 
 import numpy as np
 import cv2
@@ -27,10 +27,10 @@ def computeSSIM(y,ground_truth):
     y = y.astype(np.uint8)
     ground_truth = ground_truth *255
     ground_truth = ground_truth.astype(np.uint8) 
-    print "psnr",psnr(y,ground_truth)
+    print("psnr",psnr(y,ground_truth))
     B1,G1,R1 = cv2.split(y)
     B2, G2, R2 = cv2.split(ground_truth)
-    print "ssim","B",compare_ssim(B1,B2),"G",compare_ssim(G1,G2),"R",compare_ssim(R1,R2)
+    print("ssim","B",compare_ssim(B1,B2),"G",compare_ssim(G1,G2),"R",compare_ssim(R1,R2))
 
 import time
 
@@ -38,7 +38,7 @@ import time
 for X,Y in dg.batch_generator(12):
     t0 = time.time()
     P = model.predict(X)
-    print time.time() - t0
+    print(time.time() - t0)
     computeSSIM(P[0],Y[0])
     g = P[0]*255
     d = X[0] * 255
@@ -49,4 +49,3 @@ for X,Y in dg.batch_generator(12):
     cv2.waitKey(0)
 
 # if __name__ == '__main__':
-

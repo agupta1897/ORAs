@@ -21,12 +21,22 @@ image_list = []
 #     return skimage.util.random_noise(image, var=0.005)
 
 import data_generator as dg
-
+import tensorflow as tf
 import loss_msssim
+import math
+from skimage.measure import compare_ssim as compare_ssim
+from skimage.measure import compare_psnr as compare_psnr
+
+def PSNR(y_true, y_pred):
+    max_pixel = 1.0
+    return (10.0 * K.log((max_pixel ** 2) / (K.mean(K.square(y_pred - y_true), axis=-1))))
+
+#def SSIM(y_true, y_pred):
+#  return tf.reduce_mean(tf.image.ssim(y_true, y_pred, 2.0))
 
 def train_unet():
-    out_model_path = 'temp.h5'
-    epochs = 10
+    out_model_path = 'temp_CT_30_Adam_lr001.h5'
+    epochs = 30
     patience = 20
     batch_size = 12
     optim_type = 'Adam'
@@ -41,11 +51,12 @@ def train_unet():
         optim = SGD(lr=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
     else:
         optim = Adam(lr=learning_rate)
-    model.compile(optimizer=optim, loss=loss_msssim.MS_SSIM_l1_loss)
+    model.compile(optimizer=optim, loss=loss_msssim.MS_SSIM_l1_loss, metrics=[PSNR] )
 
     callbacks = [
 
-        ModelCheckpoint('temp.h5', monitor='val_loss', save_best_only=True, verbose=0),
+        ModelCheckpoint(out_model_path, monitor='val_loss', save_best_only=True, verbose=0),
+        EarlyStopping(monitor = 'val_loss', min_delta = 0, mode = 'auto', patience = epochs*0.1, verbose = 0)
     ]
 
     print('Start training...')
@@ -59,7 +70,7 @@ def train_unet():
         callbacks=callbacks)
 
     model.save_weights(out_model_path)
-    pd.DataFrame(history.history).to_csv('train.csv', index=False)
+    pd.DataFrame(history.history).to_csv(out_model_path.split('.')[0]+'train.csv', index=False)
     print('Training is finished (weights zf_unet_224.h5 and log zf_unet_224_train.csv are generated )...')
 
 

@@ -3,7 +3,7 @@ from keras.models import *
 import zf_unet_224_model
 import data_generator as dg
 model = zf_unet_224_model.ZF_UNET_224()
-model.load_weights("zf_unet_224_epcho260.h5")
+model.load_weights("temp.h5")
 
 #model = load_model("zf_unet_224_dust_ori.h5")
 
@@ -21,6 +21,13 @@ from keras import backend as K
 image_list = []
 dg.batch_generator(1)
 
+def PSNR(y_true, y_pred):
+    max_pixel = 1.0
+    return (10.0 * K.log((max_pixel ** 2) / (K.mean(K.square(y_pred - y_true), axis=-1))))
+
+def SSIM(y_true, y_pred):
+    return tf.reduce_mean(tf.image.ssim(y_true, y_pred, 2.0))
+
 def preprocess(image):
     #print image.shape
 
@@ -35,9 +42,9 @@ def preprocess(image):
     x_padding = int((x_res_full - w)/2)
     y_padding = int((y_res_full - h)/2)
 
-    #image = cv2.copyMakeBorder(image,y_padding,y_padding,x_padding,x_padding,cv2.BORDER_REFLECT)
+    image = cv2.copyMakeBorder(image,y_padding,y_padding,x_padding,x_padding,cv2.BORDER_REFLECT)
     padding = [y_padding, y_padding, x_padding, x_padding]
-    #return cv2.resize(image,(x_res_full,y_res_full)),padding
+    return cv2.resize(image,(x_res_full,y_res_full)),padding
 
 def removePadding(image,padding):
     shapex = image.shape
@@ -46,11 +53,13 @@ def removePadding(image,padding):
 
 
 
-def processAll(name):
-    print("Entering Process ALL: "+name)
-    #X,padding = preprocess(cv2.imread(name))
+def processAll(input_name, output_name, flag):
+    print("Entering Process ALL: "+input_name)
+    X,padding = preprocess(cv2.imread(input_name))
+    Y_true, pad = preprocess(cv2.imread(output_name))
     print("Pre process done")
     input_image = X.astype(np.float)/255
+    gt_image = Y_true.astype(np.float)/255
     print("Conv done")
     start = time()
 
@@ -64,18 +73,37 @@ def processAll(name):
     output_image = pred.astype(np.uint8)
     input_image = input_image.astype(np.uint8)
     output_image = removePadding(output_image,padding)
-    #cv2.imwrite("output.png",output_image)
-    #cv2.imshow("output",output_image)
-    #cv2.waitKey(0)
+    if flag == 0:
+        cv2.imwrite("/u/eot/manavm3/ORAs/outputs/reflection/"+input_name+".png",output_image)
+    
+    elif flag == 1:
+        cv2.imwrite("/u/eot/manavm3/ORAs/outputs/rain/"+input_name+".png",output_image)
+    
+    elif flag ==  2:
+        cv2.imwrite("/u/eot/manavm3/ORAs/outputs/reflection/"+input_name+".png",output_image)
+    return PSNR(gt_image, pre[0]), SSIM(gt_image, pre[0]) 
 
 
-path = "/u/eot/manavm3/ORAs/data/reflection/SIR/mixed_image_test"
-images = [] 
-for root, dirs, files in os.walk(path):     
-    for f in files :
-        images.append(f)
+path = ["../data/reflection/SIR/mixed_image_test","../data/rain/rainy-image-dataset-master/rainy_image_test","../data/de-fencing/SynthesizedData/test/fency"]
+gt_path = ["../data/reflection/SIR/ground_truth_test","../data/rain/rainy-image-dataset-master/ground_truth_test","../data/de-fencing/SynthesizedData/test/gt"]
+images = []
+gt_images = []
+sum_psnr = 0.0
+sum_ssim = 0.0
+for i in range(len(path)):
+    for root, dirs, files in os.walk(path[i]):     
+        for f in files :
+            images.append(f)
+for i in range(len(gt_path)):
+    for root, dirs, files in os.walk(gt_path[i]):
+        for f in files:
+            gt_images.append((f,i))
 for i in range(len(images)):
-    processAll(path + "/" + images[i])
+    psnr, ssim = processAll(path + "/" + images[i], gt_path + "/" + gt_images[i][0], gt_images[i][1])
+    sum_psnr = sum_psnr + psnr
+    sum_ssim = sum_ssim + ssim
+print("PSNR", sum_psnr/len(images))
+print("SSIM", sum_ssim/len(images))
 
 
 #processAll("real_rain_img/re-1.jpg")
